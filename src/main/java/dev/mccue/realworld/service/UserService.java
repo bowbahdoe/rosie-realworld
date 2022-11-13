@@ -108,6 +108,22 @@ public final class UserService {
     }
 
     public Optional<User> findById(String userId) {
-        return Optional.empty();
+        try (var conn = this.db.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT %s
+                     FROM "user"
+                     WHERE "user".user_id = ?
+                     """.formatted(SELECT_FIELDS))) {
+            stmt.setString(1, userId);
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(userFromRow(rs));
+            }
+            else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

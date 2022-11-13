@@ -27,7 +27,7 @@ public final class AuthService {
             var algorithm = Algorithm.HMAC256(Env.JWT_SECRET);
             var verifier = JWT.require(algorithm).build();
             decodedJWT = verifier.verify(authToken);
-        } catch (JWTVerificationException __){
+        } catch (JWTVerificationException __) {
             return Optional.empty();
         }
 

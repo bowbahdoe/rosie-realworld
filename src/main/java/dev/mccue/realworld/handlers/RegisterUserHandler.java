@@ -6,7 +6,6 @@ import dev.mccue.json.decode.alpha.JsonDecodingException;
 import dev.mccue.realworld.context.HasUserService;
 import dev.mccue.realworld.domain.User;
 import dev.mccue.realworld.domain.UserResponse;
-import dev.mccue.realworld.service.UserService;
 import dev.mccue.realworld.utils.BodyUtils;
 import dev.mccue.realworld.utils.Responses;
 import dev.mccue.regexrouter.RegexRouter;
@@ -18,7 +17,7 @@ import java.util.List;
 import static dev.mccue.realworld.service.UserService.RegistrationResult.*;
 
 public final class RegisterUserHandler<Ctx extends HasUserService> implements RegexRouter.HandlerTakingContext<Ctx> {
-    record RegisterUserRequest(String email, String username, String password) {
+    public record RegisterUserRequest(String email, String username, String password) {
         static RegisterUserRequest fromJson(Json json) throws JsonDecodingException {
             return Decoder.field(
                     json,
