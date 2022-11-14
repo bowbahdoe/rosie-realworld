@@ -12,6 +12,7 @@ import dev.mccue.realworld.Env;
 import dev.mccue.realworld.context.HasUserService;
 import dev.mccue.realworld.domain.User;
 
+import java.util.Base64;
 import java.util.Optional;
 
 public final class AuthService {
@@ -31,13 +32,16 @@ public final class AuthService {
             return Optional.empty();
         }
 
-        String userId;
+        long userId;
         try {
-            var json = Json.readString(decodedJWT.getPayload());
-            userId = Decoder.field(json, "user_id", Decoder::string);
-        } catch (JsonDecodingException | JsonReadException __) {
+            var json = Json.readString(new String(
+                    Base64.getDecoder().decode(decodedJWT.getPayload())
+            ));
+            userId = Long.parseLong(Decoder.field(json, "user_id", Decoder::string));
+        } catch (JsonDecodingException | JsonReadException | NumberFormatException __) {
             return Optional.empty();
         }
+
 
         var user = userService.findById(userId).orElse(null);
         return Optional.ofNullable(user);
@@ -46,7 +50,7 @@ public final class AuthService {
     public String jwtForUser(User user) {
         var algorithm = Algorithm.HMAC256(Env.JWT_SECRET);
         return JWT.create()
-                .withClaim("user_id", user.userId().toString())
+                .withClaim("user_id", Long.toString(user.userId()))
                 .sign(algorithm);
     }
 }

@@ -15,7 +15,8 @@ abstract class AuthenticatedHandler<Ctx extends HasAuthService>
 
     protected abstract IntoResponse handleAuthenticated(User user, Ctx ctx, RouteParams routeParams, Request request);
     private Optional<String> authTokenFromRequest(Request request) {
-        var authHeader = request.headers().get("Authorization");
+        var authHeader = request.headers().get("authorization");
+
         if (authHeader == null) {
             return Optional.empty();
         }

@@ -6,7 +6,8 @@ import dev.mccue.rosie.IntoResponse;
 import dev.mccue.rosie.Response;
 
 public record UserResponse(
-        User user
+        User user,
+        String token
 ) implements IntoResponse {
     public Json toJson() {
         return Json.objectBuilder()
@@ -14,10 +15,10 @@ public record UserResponse(
                         "user",
                         Json.objectBuilder()
                                 .put("email", Json.of(user.email()))
-                                .put("token", Json.of(user.token()))
                                 .put("username", Json.of(user.username()))
-                                .put("bio", Json.of(user.bio()))
+                                .put("bio", Json.of(user.bio().orElse(null)))
                                 .put("image", Json.of(user.image().orElse(null)))
+                                .put("token", Json.of(token))
                                 .build()
                 )
                 .build();

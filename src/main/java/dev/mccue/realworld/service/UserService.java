@@ -19,17 +19,17 @@ public final class UserService {
     }
 
     private static final String SELECT_FIELDS = """
-            "user".user_id, "user".email, "user".token, "user".username, "user".password_hash
+            "user".user_id, "user".email, "user".username, "user".bio, "user".image, "user".password_hash
             """;
 
     private static User userFromRow(ResultSet rs) throws SQLException {
         return new User(
-                UUID.fromString(rs.getString(1)),
+                rs.getLong(1),
                 rs.getString(2),
                 rs.getString(3),
-                rs.getString(4),
-                rs.getString(5),
-                Optional.ofNullable(rs.getString(1))
+                Optional.ofNullable(rs.getString(4)),
+                Optional.ofNullable(rs.getString(5)),
+                rs.getString(6)
         );
     }
 
@@ -85,7 +85,11 @@ public final class UserService {
                 insert.setString(1, username);
                 insert.setString(2, email);
                 insert.setString(3, BCrypt.withDefaults().hashToString(12, password.toCharArray()));
+                insert.execute();
             }
+
+
+            conn.commit();
 
             try (var findByEmail = conn.prepareStatement("""
                     SELECT %s
@@ -93,12 +97,10 @@ public final class UserService {
                     WHERE "user".email = ?
                     """.formatted(SELECT_FIELDS))) {
                 findByEmail.setString(1, email);
-                var rs = findByEmail.executeQuery();
 
+                var rs = findByEmail.executeQuery();
                 rs.next();
                 var user = userFromRow(rs);
-
-                conn.commit();
 
                 return new RegistrationResult.Success(user);
             }
@@ -107,14 +109,14 @@ public final class UserService {
         }
     }
 
-    public Optional<User> findById(String userId) {
+    public Optional<User> findById(long userId) {
         try (var conn = this.db.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT %s
                      FROM "user"
                      WHERE "user".user_id = ?
                      """.formatted(SELECT_FIELDS))) {
-            stmt.setString(1, userId);
+            stmt.setLong(1, userId);
             var rs = stmt.executeQuery();
             if (rs.next()) {
                 return Optional.of(userFromRow(rs));
@@ -125,5 +127,46 @@ public final class UserService {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Optional<User> findByEmail(String email) {
+        try (var conn = this.db.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT %s
+                     FROM "user"
+                     WHERE "user".email = ?
+                     """.formatted(SELECT_FIELDS))) {
+            stmt.setString(1, email);
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(userFromRow(rs));
+            }
+            else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void update(User user) {
+        try (var conn = this.db.getConnection();
+             var update = conn.prepareStatement("""
+                    UPDATE "user"
+                    SET "user".username = ?, "user".email = ?, "user".bio = ?, "user".image = ?, "user".password_hash = ?
+                    WHERE "user".user_id = ?
+                    """)) {
+            update.setString(1, user.username());
+            update.setString(2, user.email());
+            update.setString(3, user.bio().orElse(null));
+            update.setString(4, user.image().orElse(null));
+            update.setString(5, user.passwordHash());
+            update.setLong(6, user.userId());
+            System.out.println(update);
+            update.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

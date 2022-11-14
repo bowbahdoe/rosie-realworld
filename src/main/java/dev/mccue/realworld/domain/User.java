@@ -2,21 +2,20 @@ package dev.mccue.realworld.domain;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 public record User(
-        UUID userId,
+        long userId,
         String email,
-        String token,
         String username,
-        String bio,
-        Optional<String> image
+        Optional<String> bio,
+        Optional<String> image,
+        String passwordHash
 ) {
     public User {
-        Objects.requireNonNull(email);
-        Objects.requireNonNull(token);
-        Objects.requireNonNull(username);
-        Objects.requireNonNull(bio);
-        Objects.requireNonNull(image);
+        Objects.requireNonNull(email, "email must not be null");
+        Objects.requireNonNull(username, "username must not be null");
+        Objects.requireNonNull(bio, "bio must not be null");
+        Objects.requireNonNull(image, "image must not be null");
+        Objects.requireNonNull(passwordHash, "passwordHash must not be null");
     }
 }

@@ -151,6 +151,7 @@ final class RootMicrohttpHandler implements Handler {
                     if (Env.development()) {
                         var sw = new StringWriter();
                         t.printStackTrace(new PrintWriter(sw));
+                        System.out.println(sw.toString());
                         rosieResponse = new dev.mccue.rosie.Response(500, Body.fromString(sw.toString()));
                     }
                     else {

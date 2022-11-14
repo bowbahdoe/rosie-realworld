@@ -5,18 +5,12 @@ import dev.mccue.rosie.Body;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UncheckedIOException;
 import java.util.Optional;
 
 public record JsonBody(Json value) implements Body {
     @Override
     public void writeToStream(OutputStream outputStream) {
-        try {
-            Json.write(value, new OutputStreamWriter(outputStream));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        Body.fromString(Json.writeString(value)).writeToStream(outputStream);
     }
 
     @Override

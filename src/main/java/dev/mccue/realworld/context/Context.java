@@ -15,6 +15,7 @@ public record Context(SQLiteDataSource db) implements HasDB, HasUserService, Has
              var stmt = conn.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS "user" (
                     user_id integer primary key autoincrement,
+                    password_hash text,
                     email text unique,
                     username text unique,
                     image text,

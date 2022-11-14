@@ -3,6 +3,7 @@ package dev.mccue.realworld.handlers;
 import dev.mccue.json.Json;
 import dev.mccue.json.decode.alpha.Decoder;
 import dev.mccue.json.decode.alpha.JsonDecodingException;
+import dev.mccue.realworld.context.HasAuthService;
 import dev.mccue.realworld.context.HasUserService;
 import dev.mccue.realworld.domain.User;
 import dev.mccue.realworld.domain.UserResponse;
@@ -16,7 +17,7 @@ import java.util.List;
 
 import static dev.mccue.realworld.service.UserService.RegistrationResult.*;
 
-public final class RegisterUserHandler<Ctx extends HasUserService> implements RegexRouter.HandlerTakingContext<Ctx> {
+public final class RegisterUserHandler<Ctx extends HasUserService & HasAuthService> implements RegexRouter.HandlerTakingContext<Ctx> {
     public record RegisterUserRequest(String email, String username, String password) {
         static RegisterUserRequest fromJson(Json json) throws JsonDecodingException {
             return Decoder.field(
@@ -33,6 +34,7 @@ public final class RegisterUserHandler<Ctx extends HasUserService> implements Re
     @Override
     public IntoResponse handle(Ctx ctx, Request request) {
         var userService = ctx.userService();
+        var authService = ctx.authService();
         var registerUserRequest = BodyUtils.parseBody(request, RegisterUserRequest::fromJson);
 
         return switch (userService.register(
@@ -45,7 +47,7 @@ public final class RegisterUserHandler<Ctx extends HasUserService> implements Re
             case UsernameTaken __ ->
                     Responses.validationError(List.of("username taken"));
             case Success(User user) ->
-                    new UserResponse(user);
+                    new UserResponse(user, authService.jwtForUser(user));
         };
     }
 }
