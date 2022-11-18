@@ -3,7 +3,6 @@ package dev.mccue.realworld.utils;
 import dev.mccue.json.Json;
 import dev.mccue.rosie.Body;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Optional;
 

@@ -1,20 +1,20 @@
 package dev.mccue.realworld.handlers;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
 import dev.mccue.json.Json;
 import dev.mccue.json.decode.alpha.Decoder;
 import dev.mccue.realworld.context.HasAuthService;
 import dev.mccue.realworld.context.HasUserService;
+import dev.mccue.realworld.domain.PasswordHash;
 import dev.mccue.realworld.domain.User;
 import dev.mccue.realworld.domain.UserResponse;
 import dev.mccue.realworld.utils.BodyUtils;
-import dev.mccue.regexrouter.RouteParams;
 import dev.mccue.rosie.IntoResponse;
 import dev.mccue.rosie.Request;
 
 import java.util.Optional;
 
-public final class UpdateUserHandler<Ctx extends HasUserService & HasAuthService> extends AuthenticatedHandler<Ctx> {
+public final class UpdateUserHandler<Ctx extends HasUserService & HasAuthService>
+        implements AuthenticatedHandler<Ctx> {
     public record UpdateUserRequest(
        Optional<String> email,
        Optional<String> username,
@@ -34,7 +34,7 @@ public final class UpdateUserHandler<Ctx extends HasUserService & HasAuthService
     }
 
     @Override
-    protected IntoResponse handleAuthenticated(User user, Ctx ctx, RouteParams routeParams, Request request) {
+    public IntoResponse handleAuthenticated(User user, Ctx ctx, Request request) {
         var userService = ctx.userService();
         var authService = ctx.authService();
         var updateUserRequest = BodyUtils.parseBody(request, UpdateUserRequest::fromJson);
@@ -45,7 +45,7 @@ public final class UpdateUserHandler<Ctx extends HasUserService & HasAuthService
                 updateUserRequest.bio.or(user::bio),
                 updateUserRequest.image.or(user::image),
                 updateUserRequest.password
-                        .map(password -> BCrypt.withDefaults().hashToString(12, password.toCharArray()))
+                        .map(PasswordHash::fromUnHashedPassword)
                         .orElse(user.passwordHash())
         );
         userService.update(updatedUser);

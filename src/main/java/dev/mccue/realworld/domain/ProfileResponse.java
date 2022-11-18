@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public record ProfileResponse(
         String username,
-        String bio,
+        Optional<String> bio,
         Optional<String> image,
         boolean following
 ) implements IntoResponse {
@@ -17,7 +17,7 @@ public record ProfileResponse(
         return Json.objectBuilder()
                 .put("profile", Json.objectBuilder()
                         .put("username", Json.of(username))
-                        .put("bio", Json.of(bio))
+                        .put("bio", Json.of(bio.orElse(null)))
                         .put("image", Json.of(image.orElse(null)))
                         .put("following", Json.of(following))
                         .build())

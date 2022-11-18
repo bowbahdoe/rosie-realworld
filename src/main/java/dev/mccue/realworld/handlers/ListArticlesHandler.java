@@ -1,17 +1,24 @@
 package dev.mccue.realworld.handlers;
 
+import dev.mccue.json.Json;
+import dev.mccue.realworld.context.HasArticleService;
+import dev.mccue.realworld.service.ArticleService;
+import dev.mccue.realworld.utils.JsonBody;
 import dev.mccue.realworld.utils.QueryParams;
 import dev.mccue.regexrouter.RegexRouter;
 import dev.mccue.regexrouter.RouteParams;
+import dev.mccue.rosie.Body;
 import dev.mccue.rosie.IntoResponse;
 import dev.mccue.rosie.Request;
+import dev.mccue.rosie.Response;
 
 import java.util.Map;
 
-public final class ListArticlesHandler<Ctx> implements RegexRouter.HandlerTakingContextAndRouteParams<Ctx> {
+public final class ListArticlesHandler<Ctx extends HasArticleService>
+        implements RegexRouter.HandlerTakingContext<Ctx> {
 
     @Override
-    public IntoResponse handle(Ctx context, RouteParams routeParams, Request request) {
+    public IntoResponse handle(Ctx context, Request request) {
         var params = request.queryString()
                 .map(QueryParams::parse)
                 .orElse(Map.of());
@@ -22,6 +29,6 @@ public final class ListArticlesHandler<Ctx> implements RegexRouter.HandlerTaking
         var limit = params.get("limit");
         var offset = params.get("offset");
 
-        return null;
+        return new Response(new JsonBody(Json.objectBuilder().build()));
     }
 }

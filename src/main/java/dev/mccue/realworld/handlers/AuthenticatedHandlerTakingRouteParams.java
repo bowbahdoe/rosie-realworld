@@ -5,6 +5,7 @@ import dev.mccue.regexrouter.RouteParams;
 import dev.mccue.rosie.IntoResponse;
 import dev.mccue.rosie.Request;
 
-public interface AuthenticatedHandler<Ctx> {
-    IntoResponse handleAuthenticated(User user, Ctx ctx, Request request);
+public interface AuthenticatedHandlerTakingRouteParams<Ctx> {
+
+    IntoResponse handleAuthenticated(User user, Ctx ctx, RouteParams routeParams, Request request);
 }

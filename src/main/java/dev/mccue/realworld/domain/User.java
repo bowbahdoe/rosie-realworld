@@ -9,7 +9,7 @@ public record User(
         String username,
         Optional<String> bio,
         Optional<String> image,
-        String passwordHash
+        PasswordHash passwordHash
 ) {
     public User {
         Objects.requireNonNull(email, "email must not be null");
@@ -17,5 +17,9 @@ public record User(
         Objects.requireNonNull(bio, "bio must not be null");
         Objects.requireNonNull(image, "image must not be null");
         Objects.requireNonNull(passwordHash, "passwordHash must not be null");
+    }
+
+    public boolean isCorrectPassword(String password) {
+        return this.passwordHash.isCorrectPassword(password);
     }
 }

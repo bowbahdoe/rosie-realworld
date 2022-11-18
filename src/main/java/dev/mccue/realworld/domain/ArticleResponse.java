@@ -1,39 +1,69 @@
 package dev.mccue.realworld.domain;
 
 import dev.mccue.json.Json;
+import dev.mccue.realworld.service.ArticleService;
+import dev.mccue.realworld.service.UserService;
 import dev.mccue.realworld.utils.JsonBody;
 import dev.mccue.rosie.IntoResponse;
 import dev.mccue.rosie.Response;
 
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+
 public record ArticleResponse(
-        String slug,
-        String title,
-        String description,
-        Author author
+        Article article,
+        FavoritedInfo favoritedInfo,
+        boolean followingAuthor,
+        User author,
+        List<String> tags
 ) implements IntoResponse {
-    public record Author(
-            String username,
-            String bio,
-            String image,
-            boolean following
-    ) {
-        public Json toJson() {
-            return Json.objectBuilder()
-                    .put("username", Json.of(username))
-                    .put("bio", Json.of(bio))
-                    .put("image", Json.of(image))
-                    .put("following", Json.of(following))
-                    .build();
-        }
-    }
 
     public Json toJson() {
         return Json.objectBuilder()
-                .put("slug", Json.of(slug))
-                .put("author", author.toJson())
-                .put("title", Json.of(title))
-                .put("description", Json.of(description))
+                .put("article", Json.objectBuilder()
+                    .put("slug", Json.of(article.slug().toString()))
+                    .put("title", Json.of(article.title()))
+                    .put("body", Json.of(article.body()))
+                    .put("description", Json.of(article.description()))
+                    .put("description", Json.of(article.body()))
+                    .put("tagList", Json.of(tags.stream().map(Json::of).toList()))
+                    .put("createdAt", Json.of(DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(article.createdAt())))
+                    .put("updatedAt", Json.of(DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(article.updatedAt())))
+                    .put("favorited", Json.of(favoritedInfo.favorited()))
+                    .put("favoritesCount", Json.of(favoritedInfo.favoriteCount()))
+                    .put("author", Json.objectBuilder()
+                            .put("username", Json.of(author.username()))
+                            .put("bio", Json.of(author.bio().orElse(null)))
+                            .put("image", Json.of(author.image().orElse(null)))
+                            .put("following", Json.of(followingAuthor))
+                            .build())
+                    .build())
                 .build();
+    }
+
+    public static Optional<ArticleResponse> forArticleId(ArticleService articleService, UserService userService, long userId, long articleId) {
+        var article = articleService.forId(articleId).orElse(null);
+        if (article == null) {
+            return Optional.empty();
+        }
+
+        var favoritedInfo = articleService.favoritedInfoForId(userId, article.articleId());
+        var author = userService.findById(article.userId()).orElse(null);
+        if (author == null) {
+            return Optional.empty();
+        }
+
+        boolean isFollowing = userService.isFollowing(userId, author.userId());
+        var tags = articleService.tags(article.articleId());
+
+        return Optional.of(new ArticleResponse(
+                article,
+                favoritedInfo,
+                isFollowing,
+                author,
+                tags
+        ));
     }
 
     @Override

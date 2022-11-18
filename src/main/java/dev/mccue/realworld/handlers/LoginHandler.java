@@ -16,7 +16,8 @@ import dev.mccue.rosie.Request;
 
 import java.util.List;
 
-public final class LoginHandler<Ctx extends HasUserService & HasAuthService> implements RegexRouter.HandlerTakingContext<Ctx> {
+public final class LoginHandler<Ctx extends HasUserService & HasAuthService>
+        implements RegexRouter.HandlerTakingContext<Ctx> {
     public record LoginRequest(
             String email,
             String password
@@ -28,6 +29,7 @@ public final class LoginHandler<Ctx extends HasUserService & HasAuthService> imp
             ));
         }
     }
+
     @Override
     public IntoResponse handle(Ctx context, Request request) {
         var userService = context.userService();
@@ -37,12 +39,7 @@ public final class LoginHandler<Ctx extends HasUserService & HasAuthService> imp
         var badEmailOrPassword = Responses.validationError(List.of("invalid email or password"));
 
         var user = userService.findByEmail(loginRequest.email).orElse(null);
-        if (
-                user == null ||
-                        !BCrypt.verifyer()
-                                .verify(loginRequest.password.toCharArray(), user.passwordHash())
-                                .verified
-        ) {
+        if (user == null || !user.isCorrectPassword(loginRequest.password())) {
             return badEmailOrPassword;
         }
         else {

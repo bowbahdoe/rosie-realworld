@@ -1,7 +1,9 @@
 package dev.mccue.realworld;
 
+
 import dev.mccue.realworld.context.Context;
 import dev.mccue.realworld.handlers.*;
+import dev.mccue.realworld.utils.HandlerUtils;
 import dev.mccue.realworld.utils.Responses;
 import dev.mccue.regexrouter.RegexRouter;
 import dev.mccue.rosie.Body;
@@ -14,14 +16,17 @@ import org.microhttp.Response;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import static dev.mccue.realworld.utils.HandlerUtils.authenticated;
+
 final class RootMicrohttpHandler implements Handler {
+
     private final Options options;
     private final Context context;
     private final RegexRouter<Context> router;
-
 
     RootMicrohttpHandler(Options options, Context context) {
         this.options = options;
@@ -45,12 +50,12 @@ final class RootMicrohttpHandler implements Handler {
                 .addMapping(
                         "GET",
                         Pattern.compile("/api/user"),
-                        new GetCurrentUserHandler<>()
+                        authenticated(new GetCurrentUserHandler<>())
                 )
                 .addMapping(
                         "PUT",
                         Pattern.compile("/api/user"),
-                        new UpdateUserHandler<>()
+                        authenticated(new UpdateUserHandler<>())
                 )
                 .addMapping(
                         "GET",
@@ -60,12 +65,12 @@ final class RootMicrohttpHandler implements Handler {
                 .addMapping(
                         "POST",
                         Pattern.compile("/api/profiles/(?<username>.+)/follow"),
-                        new FollowUserHandler<>()
+                        authenticated(new FollowUserHandler<>())
                 )
                 .addMapping(
                         "DELETE",
                         Pattern.compile("/api/profiles/(?<username>.+)/follow"),
-                        new UnfollowUserHandler<>()
+                        authenticated(new UnfollowUserHandler<>())
                 )
                 .addMapping(
                         "GET",
@@ -85,17 +90,17 @@ final class RootMicrohttpHandler implements Handler {
                 .addMapping(
                         "POST",
                         Pattern.compile("/api/articles"),
-                        new CreateArticleHandler<>()
+                        authenticated(new CreateArticleHandler<>())
                 )
                 .addMapping(
                         "PUT",
                         Pattern.compile("/api/articles/(?<slug>.+)"),
-                        new UpdateArticleHandler<>()
+                        authenticated(new UpdateArticleHandler<>())
                 )
                 .addMapping(
                         "DELETE",
                         Pattern.compile("/api/articles/(?<slug>.+)"),
-                        new DeleteArticleHandler<>()
+                        authenticated(new DeleteArticleHandler<>())
                 )
                 .addMapping(
                         "POST",
@@ -115,17 +120,17 @@ final class RootMicrohttpHandler implements Handler {
                 .addMapping(
                         "POST",
                         Pattern.compile("/api/articles/(?<slug>.+)/favorite"),
-                        new FavoriteArticleHandler<>()
+                        authenticated(new FavoriteArticleHandler<>())
                 )
                 .addMapping(
                         "DELETE",
                         Pattern.compile("/api/articles/(?<slug>.+)/favorite"),
-                        new UnFavoriteArticleHandler<>()
+                        authenticated(new UnFavoriteArticleHandler<>())
                 )
                 .addMapping(
                         "GET",
                         Pattern.compile("/api/tags"),
-                        new GetTagsHandler<>()
+                        authenticated(new GetTagsHandler<>())
                 )
                 .build();
     }
@@ -151,7 +156,7 @@ final class RootMicrohttpHandler implements Handler {
                     if (Env.development()) {
                         var sw = new StringWriter();
                         t.printStackTrace(new PrintWriter(sw));
-                        System.out.println(sw.toString());
+                        System.err.println(sw);
                         rosieResponse = new dev.mccue.rosie.Response(500, Body.fromString(sw.toString()));
                     }
                     else {
@@ -161,7 +166,12 @@ final class RootMicrohttpHandler implements Handler {
                 }
             }
 
-            consumer.accept(MicrohttpAdapter.toMicrohttpResponse(rosieResponse.intoResponse()));
+            Response response = MicrohttpAdapter.toMicrohttpResponse(Responses.internalError());
+            try {
+                response = MicrohttpAdapter.toMicrohttpResponse(rosieResponse.intoResponse());
+            } finally {
+                consumer.accept(response);
+            }
         });
     }
 }
