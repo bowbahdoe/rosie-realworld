@@ -1,11 +1,9 @@
 package dev.mccue.realworld.domain;
 
-import dev.mccue.realworld.repository.SettableParameter;
+
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;

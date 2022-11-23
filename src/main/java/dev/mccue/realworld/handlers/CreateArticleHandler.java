@@ -11,6 +11,8 @@ import dev.mccue.realworld.utils.BodyUtils;
 import dev.mccue.rosie.IntoResponse;
 import dev.mccue.rosie.Request;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class CreateArticleHandler<Ctx extends HasArticleService & HasUserService>
@@ -50,7 +52,6 @@ public final class CreateArticleHandler<Ctx extends HasArticleService & HasUserS
                 createArticleRequest.tagList(),
                 ExternalId.generate()
         );
-
 
         return ArticleResponse
                 .forArticleId(articleService, userService, user.userId(), articleId)

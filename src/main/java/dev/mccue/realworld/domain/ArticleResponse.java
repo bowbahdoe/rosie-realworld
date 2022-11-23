@@ -41,6 +41,16 @@ public record ArticleResponse(
                     .build())
                 .build();
     }
+    public static List<ArticleResponse> forQuery(ArticleService articleService, UserService userService, ArticleSearchQuery query) {
+        return articleService.all()
+                .stream()
+                .flatMap(article -> forArticleId(articleService, userService, article.userId(), article.articleId()).stream())
+                .filter(articleResponse -> query.tag().map(articleResponse.tags::contains).orElse(true))
+
+                .skip(query.offset())
+                .limit(query.limit())
+                .toList();
+    }
 
     public static Optional<ArticleResponse> forArticleId(ArticleService articleService, UserService userService, long userId, long articleId) {
         var article = articleService.forId(articleId).orElse(null);

@@ -2,12 +2,13 @@ package dev.mccue.realworld.context;
 
 import dev.mccue.realworld.service.ArticleService;
 import dev.mccue.realworld.service.AuthService;
+import dev.mccue.realworld.service.TagService;
 import dev.mccue.realworld.service.UserService;
 import org.sqlite.SQLiteDataSource;
 
 import java.sql.SQLException;
 
-public record Context(SQLiteDataSource db) implements HasDB, HasUserService, HasAuthService, HasArticleService {
+public record Context(SQLiteDataSource db) implements HasDB, HasUserService, HasAuthService, HasArticleService, HasTagService {
     public static Context start() {
         SQLiteDataSource db = new SQLiteDataSource();
         db.setUrl("jdbc:sqlite:test.db");
@@ -124,5 +125,10 @@ public record Context(SQLiteDataSource db) implements HasDB, HasUserService, Has
     @Override
     public ArticleService articleService() {
         return new ArticleService(this);
+    }
+
+    @Override
+    public TagService tagService() {
+        return new TagService(this);
     }
 }

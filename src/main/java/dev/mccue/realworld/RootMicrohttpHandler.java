@@ -16,7 +16,6 @@ import org.microhttp.Response;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 

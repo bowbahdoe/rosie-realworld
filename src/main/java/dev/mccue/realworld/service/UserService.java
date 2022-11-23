@@ -7,6 +7,7 @@ import org.sqlite.SQLiteDataSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public final class UserService {
@@ -17,9 +18,14 @@ public final class UserService {
         this.db = context.db();
     }
 
-    private static final String SELECT_FIELDS = """
-            "user".user_id, "user".email, "user".username, "user".bio, "user".image, "user".password_hash
-            """;
+    private static final String SELECT_FIELDS = String.join(", ", List.of(
+            "user.user_id",
+            "user.email",
+            "user.username",
+            "user.bio",
+            "user.image",
+            "user.password_hash"
+    ));
 
     private static User userFromRow(ResultSet rs) throws SQLException {
         return new User(
@@ -213,7 +219,7 @@ public final class UserService {
              var stmt = conn.prepareStatement(
                      // language=SQL
                      """
-                     SELECT 1 
+                     SELECT 1
                      FROM follow
                      WHERE follow.follower_user_id = ? AND follow.following_user_id = ?
                      """)) {

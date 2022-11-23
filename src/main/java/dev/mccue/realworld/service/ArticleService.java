@@ -1,12 +1,10 @@
 package dev.mccue.realworld.service;
 
 import dev.mccue.realworld.context.HasDB;
-import dev.mccue.realworld.domain.Article;
-import dev.mccue.realworld.domain.ArticleSlug;
-import dev.mccue.realworld.domain.ExternalId;
-import dev.mccue.realworld.domain.FavoritedInfo;
+import dev.mccue.realworld.domain.*;
 import org.sqlite.SQLiteDataSource;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -33,16 +31,16 @@ public final class ArticleService {
             );
 
     private static Article articleFromRow(ResultSet rs) throws SQLException {
-        return new Article(
-                rs.getLong(1),
-                new ExternalId(rs.getString(2)),
-                rs.getString(3),
-                rs.getString(4),
-                rs.getString(5),
-                rs.getTimestamp(6).toLocalDateTime(),
-                rs.getTimestamp(7).toLocalDateTime(),
-                rs.getLong(8)
-        );
+        return ArticleBuilder.builder()
+                .articleId(rs.getLong(1))
+                .externalId(new ExternalId(rs.getString(2)))
+                .title(rs.getString(3))
+                .description(rs.getString(4))
+                .body(rs.getString(5))
+                .createdAt(rs.getTimestamp(6).toLocalDateTime())
+                .updatedAt(rs.getTimestamp(7).toLocalDateTime())
+                .userId(rs.getLong(8))
+                .build();
     }
     public Optional<Article> forId(long articleId) {
         try (var conn = db.getConnection();
@@ -64,6 +62,26 @@ public final class ArticleService {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<Article> all() {
+        var articles = new ArrayList<Article>();
+        try (var conn = db.getConnection();
+             var stmt = conn.prepareStatement(
+                     // language=SQL
+                     """
+                     SELECT %s
+                     FROM article
+                     """.formatted(SELECT_FIELDS))) {
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                articles.add(articleFromRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return Collections.unmodifiableList(articles);
     }
 
     public FavoritedInfo favoritedInfoForId(long userId, long articleId) {
